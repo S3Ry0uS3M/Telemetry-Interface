@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36203.30 d17.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TelemetryInterface", "TelemetryInterface\TelemetryInterface.vcxproj", "{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Debug|x64.ActiveCfg = Debug|x64
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Debug|x64.Build.0 = Debug|x64
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Debug|x86.ActiveCfg = Debug|Win32
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Debug|x86.Build.0 = Debug|Win32
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x64.ActiveCfg = Release|x64
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x64.Build.0 = Release|x64
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x86.ActiveCfg = Release|Win32
+		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9AD4EB38-46C2-44C6-8194-D7EE509B4A7D}
+	EndGlobalSection
+EndGlobal
