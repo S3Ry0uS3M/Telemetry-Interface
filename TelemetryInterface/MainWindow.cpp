@@ -24,7 +24,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	});
 
 	connect(gamepad, &QGamepad::buttonR2Changed, this, [this](double value) {
-		throttlePercent = value * 100;
+		throttlePercent = ((value * 1) / 0.85) * 100;
+		throttlePercent = std::clamp(throttlePercent, 0.0, 100.0);
 	});
 
 	// Example: steering wheel axis
