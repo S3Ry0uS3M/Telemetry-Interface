@@ -37,13 +37,13 @@
      <height>25</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuAdd_Plot">
+   <widget class="QMenu" name="menuGraphs">
     <property name="title">
-     <string>Options</string>
+     <string>Graphs</string>
     </property>
     <addaction name="actionAdd_Plot"/>
    </widget>
-   <addaction name="menuAdd_Plot"/>
+   <addaction name="menuGraphs"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionAdd_Plot">
