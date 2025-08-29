@@ -6,15 +6,17 @@
 class Carrier
 {
 public:
-	Carrier(double fsw) {
-		this->Fsw = fsw;
-		this->T = 1.0 / fsw;
+	Carrier() {
+		this->T = 1.0 / Fsw;
 	};
 	~Carrier() {};
 
+public:
+	double getFrequency() const { return Fsw; };
+
 protected:
-	double Fsw; // Frequenza di commutazione
-	double T;   // Periodo di commutazione
+	double Fsw = 5000; // Frequenza di commutazione
+	double T;		   // Periodo di commutazione
 
 public:
 	double getCarrierValue(double t)

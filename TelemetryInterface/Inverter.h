@@ -6,8 +6,8 @@
 class Inverter
 {
 public:
-	Inverter(double fsw) {
-        carrier = new Carrier(fsw);
+	Inverter() {
+        carrier = new Carrier();
     };
 	~Inverter() {};
 

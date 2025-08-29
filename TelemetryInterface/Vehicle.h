@@ -9,8 +9,8 @@ const double RHO = 1.2041;
 class Vehicle
 {
 public:
-    Vehicle(double fsw) {
-        powertrain = new Powertrain(fsw);
+    Vehicle() {
+        powertrain = new Powertrain();
     };
     ~Vehicle() {};
 

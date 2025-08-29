@@ -8,10 +8,10 @@
 class Powertrain
 {
 public:
-	Powertrain(double fsw) {
+	Powertrain() {
 		motor = new Motor();
 		battery = new Battery();
-		inverter = new Inverter(fsw);
+		inverter = new Inverter();
 		pidDriver = new PIDController(100, 5, 0, -4000, 4000);
 
 		double VdcMax = battery->getVdcMax();
