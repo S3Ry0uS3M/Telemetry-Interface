@@ -25,6 +25,9 @@
     <Filter Include="File di intestazione\Car\Inverter">
       <UniqueIdentifier>{506742b6-6a48-4aa5-99d6-37ad270dd7c5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="File di intestazione\xDOFCar">
+      <UniqueIdentifier>{85c5c7e2-6e6b-4fd1-a8d3-73a66974d182}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -80,6 +83,12 @@
     </ClInclude>
     <ClInclude Include="VehicleTelemetry.h">
       <Filter>File di intestazione\Car</Filter>
+    </ClInclude>
+    <ClInclude Include="XdofVehicle.h">
+      <Filter>File di intestazione\xDOFCar</Filter>
+    </ClInclude>
+    <ClInclude Include="XdofVehicleTelemetry.h">
+      <Filter>File di intestazione\xDOFCar</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

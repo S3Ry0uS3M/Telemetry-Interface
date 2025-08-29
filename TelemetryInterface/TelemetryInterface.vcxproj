@@ -169,6 +169,8 @@
     <ClInclude Include="Motor.h" />
     <ClInclude Include="PIDController.h" />
     <ClInclude Include="VehicleTelemetry.h" />
+    <ClInclude Include="XdofVehicle.h" />
+    <ClInclude Include="XdofVehicleTelemetry.h" />
     <QtMoc Include="PlotWidget.h" />
     <ClInclude Include="Powertrain.h" />
     <ClInclude Include="Vehicle.h" />
