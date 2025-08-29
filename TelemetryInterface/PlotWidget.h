@@ -32,12 +32,16 @@ public:
 public:
 	void setSelectableChannels(QStringList list)
 	{
+		this->comboBox->clear();
 		this->comboBox->addItems(list);
 		this->comboBox->setCurrentIndex(-1); // blank selection
 	}
 
 	void setAvailableChannels(std::map<QString, std::function<double()>>* map)
 	{
+		int listSize = selectedChannel.size();
+		for (int i = listSize; i > 1; i--)
+			deleteChannelBox();
 		this->availableChannels = map;
 	}
 
@@ -93,7 +97,16 @@ private:
 	{
 		if (availableChannels == nullptr)
 			return;
-		get<1>(this->selectedChannel[index]) = availableChannels->at(combo->currentText());
+
+		int comboIndex = combo->currentIndex();
+		if (comboIndex < 0 || index < 0 || index >= selectedChannel.size())
+			return; // invalid index
+
+		QString key = combo->currentText();
+		auto it = availableChannels->find(key);
+		if (it != availableChannels->end()) {
+			get<1>(this->selectedChannel[index]) = it->second;
+		}
 	}
 
 private slots:
