@@ -15,7 +15,7 @@ public:
     double getMutualInductaceId() const { return (Ld * getId() + LambdaM) * omega* PolePairs; };
     double getMechanicalPowerKW() const { return getTorque() * omega / 1000.0; };
     double getElectricalAngle() const { return theta_e; };
-    double getTorque() const { return 1.5 * PolePairs * (LambdaM * iq + (Ld - Lq) * id * iq); };
+    double getTorque() const { return Torque; };
     double getSpeedRPM() const { return omega * 60.0 / (2 * std::numbers::pi); };
     double getMaxTorque() const { return 500; };
     double getCoastRegenTorque() const { return 150; };
@@ -37,8 +37,12 @@ private:
     double theta = 0;        // [rad]
     double theta_e = 0;      // [rad]
 
+protected:
+    // Outputs
+    double Torque = 0;
+
 public:
-    void update(double carOmega, double vd, double vq, double dt)
+    void update(double carOmega, double vd, double vq, double SoC, double dt)
     {
         double omega_e = carOmega * PolePairs;
         theta_e += omega_e * dt;
@@ -54,7 +58,13 @@ public:
         omega = carOmega;
         theta += omega * dt;
 
-        double torque = 1.5 * PolePairs * (LambdaM * iq + (Ld - Lq) * id * iq);
+        double clampTorque = 1.0;
+        if (SoC < 20)
+        {
+            double scale = SoC / 20.0;  // 20% -> scale=1, 0% -> scale=0
+            clampTorque = std::clamp(scale, 0.0, 1.0);
+        }
+        Torque = 1.5 * PolePairs * (LambdaM * iq + (Ld - Lq) * id * iq) * clampTorque;
     }
 
     void updateTorque(double vd, double vq, double tau_L, double dt)
