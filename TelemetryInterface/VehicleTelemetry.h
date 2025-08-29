@@ -6,7 +6,7 @@
 class VehicleTelemetry : public Vehicle
 {
 public:
-	VehicleTelemetry(double fsw) : Vehicle(fsw)
+	VehicleTelemetry() : Vehicle()
 	{
 		telemetry["CarSpeed"] = [this]() { return this->getSpeed(); };
 		telemetry["CarOmega"] = [this]() { return this->getOmega(); };
@@ -42,6 +42,38 @@ public:
 
 	std::map<QString, std::function<double()>>* getMap() { return &telemetry; };
 
+	void simulateStep(double throttlePercent, double brakePercent, double simTime, double dt)
+	{
+		Vehicle* veh = this;
+		Powertrain* powertrain = veh->powertrain;
+		//double tau_star = powertrain->pidDriver->update(speed_ref, veh->getSpeed(), dt) * veh->getTractiveRatio();
+
+		Motor* motor = powertrain->motor;
+		double tau_star = (throttlePercent / 100) * motor->getMaxTorque();
+		if (throttlePercent < 1e-3 && veh->getSpeed() > 1.0) {
+			tau_star = -motor->getCoastRegenTorque();  // small negative
+		}
+		if ((veh->getSpeed() != 0 && throttlePercent < 1e-3) || throttlePercent > 1e-3)
+		{
+			double vd_star = powertrain->pidId->update(id_target, motor->getId(), dt) - motor->getMutualInductaceIq();
+			double vq_star = powertrain->pidIq->update(motor->getIqTarget(tau_star), motor->getIq(), dt) + motor->getMutualInductaceId();
+
+			Battery* battery = powertrain->battery;
+			battery->update((motor->getMechanicalPowerKW() * 1000) / battery->getVbat(), dt);
+
+			Inverter* inverter = powertrain->inverter;
+			inverter->update(battery->getVbat(), vd_star, vq_star, motor->getElectricalAngle(), inverter->carrier->getCarrierValue(simTime), (int)(1.0 / (inverter->carrier->getFrequency() * dt)));
+
+			motor->update(veh->getOmega(), inverter->getVd(), inverter->getVq(), battery->getSoC(), dt);  // vd_star, vq_star, dt); // inverter->getVd(), inverter->getVq(), dt);
+			veh->update(motor->getTorque(), 0, brakePercent / 100, dt);
+		}
+		else if (throttlePercent < 1e-3)
+			veh->update(0, 0, brakePercent / 100, dt);
+	}
+
 protected:
+	double speed_ref = 100.0;
+	double id_target = 0.0;
+	double tau_ref = 200;
 	std::map<QString, std::function<double()>> telemetry;
 };
