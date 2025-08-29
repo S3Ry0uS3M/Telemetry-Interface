@@ -4,21 +4,20 @@
 #include <QTimer>
 #include <QtMath>
 #include <QGamepad>
+#include <variant>
 #include "qcustomplot.h"
 
 #include "VehicleTelemetry.h"
+#include "XdofVehicleTelemetry.h"
+
 #include "PlotWidget.h";
 #include "ui_MainWindow.h"
 
 using namespace std;
+using Objects = std::variant<std::shared_ptr<VehicleTelemetry>, std::shared_ptr<XdofVehicleTelemetry>>;
 
 const double dt = 1E-05;
 const double millis = 1.0 / 33.0;
-
-const double fsw = 5000;
-const double speed_ref = 100.0;
-const double id_target = 0.0;
-const double tau_ref = 200;
 
 class MainWindow : public QMainWindow, Ui::MainWindow
 {
@@ -31,8 +30,13 @@ public:
 			simThread.join();
 	};
 
-public:
-	VehicleTelemetry* vehTelem;
+protected:
+	QString selectedObject;
+	Objects* selectedSimulation = nullptr;
+	std::map<QString, Objects> objectsMap = {
+		{ "Electric Car Longitudinal", std::make_shared<VehicleTelemetry>() },
+		{ "XDOF Car Model", std::make_shared<XdofVehicleTelemetry>() }
+	};
 
 protected:
 	QTimer* timer;

@@ -4,9 +4,38 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 {
 	this->setupUi(this);
 	setWindowTitle("Telemetry Interface");
+
+	// Add telemetry selection
+	QToolBar* toolbar = new QToolBar("Top Toolbar", this);
+	addToolBar(Qt::TopToolBarArea, toolbar);
+	QComboBox* combo = new QComboBox();
+	combo->setFixedWidth(300);
+	QStringList keys;
+	for (const auto& pair : objectsMap) {
+		keys.push_back(pair.first);
+	}
+	combo->addItems(keys);
+	combo->setCurrentIndex(-1);
+	connect(combo, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [=]() {
+		selectedObject = combo->currentText();
+		auto it = objectsMap.find(selectedObject);
+		if (it != objectsMap.end()) {
+			selectedSimulation = &(it->second);   // store pointer to active simulation object
+			// Update plots comboboxes
+			for (PlotWidget* widget : plotWidgets)
+			{
+				if (!widget) continue;
+
+				std::visit([&](auto& sim) {
+					widget->setSelectableChannels(sim->getChannels());
+					widget->setAvailableChannels(sim->getMap());
+				}, *selectedSimulation);
+			}
+		}
+	});
+	toolbar->addWidget(combo);
 	
 	// Start simulation thread
-	vehTelem = new VehicleTelemetry(fsw);
 	realClock = new QElapsedTimer();
 	realClock->start();
 	simTime = 0.0;
@@ -44,10 +73,15 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 void MainWindow::on_actionAdd_Plot_triggered()
 {
+	if (!selectedSimulation)
+		return;
+
 	// Initialize widget
 	PlotWidget* widget = new PlotWidget();
-	widget->setSelectableChannels(this->vehTelem->getChannels());
-	widget->setAvailableChannels(this->vehTelem->getMap());
+	std::visit([&](auto& sim) {
+		widget->setSelectableChannels(sim->getChannels());
+		widget->setAvailableChannels(sim->getMap());
+	}, *selectedSimulation);
 	plotWidgets.append(widget);
 
 	QDockWidget* dock = new QDockWidget("Plot " + QString::number(this->plotWidgets.size()), this);
@@ -77,47 +111,34 @@ void MainWindow::simulateLoop()
 
 void MainWindow::simulateStep()
 {
-	Vehicle* veh = vehTelem;
-	Powertrain* powertrain = veh->powertrain;
-	//double tau_star = powertrain->pidDriver->update(speed_ref, veh->getSpeed(), dt) * veh->getTractiveRatio();
-	
-	Motor* motor = powertrain->motor;
-	double tau_star = (throttlePercent / 100) * motor->getMaxTorque();
-	if (throttlePercent < 1e-3 && veh->getSpeed() > 1.0) {
-		tau_star = -motor->getCoastRegenTorque();  // small negative
+	if (selectedSimulation) {
+		std::visit([&](auto& sim) {
+			using T = std::decay_t<decltype(sim)>;
+
+			if constexpr (std::is_same_v<T, std::shared_ptr<VehicleTelemetry>>) {
+				sim->simulateStep(throttlePercent, brakePercent, simTime, dt);
+			}
+			else if constexpr (std::is_same_v<T, std::shared_ptr<XdofVehicleTelemetry>>) {
+				sim->simulateStep(dt);
+			}
+		}, *selectedSimulation);
 	}
-	if ((veh->getSpeed() != 0 && throttlePercent < 1e-3) || throttlePercent > 1e-3)
-	{
-		double vd_star = powertrain->pidId->update(id_target, motor->getId(), dt) - motor->getMutualInductaceIq();
-		double vq_star = powertrain->pidIq->update(motor->getIqTarget(tau_star), motor->getIq(), dt) + motor->getMutualInductaceId();
-
-		Battery* battery = powertrain->battery;
-		battery->update((motor->getMechanicalPowerKW() * 1000) / battery->getVbat(), dt);
-
-		Inverter* inverter = powertrain->inverter;
-		inverter->update(battery->getVbat(), vd_star, vq_star, motor->getElectricalAngle(), inverter->carrier->getCarrierValue(simTime), (int)(1.0 / (fsw * dt)));
-
-		motor->update(veh->getOmega(), inverter->getVd(), inverter->getVq(), dt);  // vd_star, vq_star, dt); // inverter->getVd(), inverter->getVq(), dt);
-		veh->update(motor->getTorque(), 0, brakePercent / 100, dt);
-	}
-	else if (throttlePercent < 1e-3)
-		veh->update(0, 0, brakePercent / 100, dt);
 }
 
 void MainWindow::updateData(double realTime)
 {
-	//if (keysReleased.contains(Qt::Key_Up) && throttlePercent > 0)
-	//	throttlePercent -= 5;
-	//if (keysHeld.contains(Qt::Key_Up))
-	//	throttlePercent += 5;
+	if (keysReleased.contains(Qt::Key_Up) && throttlePercent > 0)
+		throttlePercent -= 5;
+	if (keysHeld.contains(Qt::Key_Up))
+		throttlePercent += 5;
 
-	//if (keysReleased.contains(Qt::Key_Down) && brakePercent < 0)
-	//	brakePercent += 5;
-	//if (keysHeld.contains(Qt::Key_Down))
-	//	brakePercent -= 1;
+	if (keysReleased.contains(Qt::Key_Down) && brakePercent > 0)
+		brakePercent -= 5;
+	if (keysHeld.contains(Qt::Key_Down))
+		brakePercent += 5;
 
-	//throttlePercent = std::clamp(throttlePercent, 0.0, 100.0);
-	//brakePercent = std::clamp(brakePercent, -100.0, 0.0);
+	throttlePercent = std::clamp(throttlePercent, 0.0, 100.0);
+	brakePercent = std::clamp(brakePercent, 0.0, 100.0);
 
 	for (PlotWidget* widget : plotWidgets)
 	{
