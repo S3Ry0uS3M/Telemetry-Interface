@@ -10,7 +10,8 @@
 #include "VehicleTelemetry.h"
 #include "XdofVehicleTelemetry.h"
 
-#include "PlotWidget.h";
+#include "PlotWidget.h"
+#include "TyreWidget.h"
 #include "ui_MainWindow.h"
 
 using namespace std;
@@ -44,6 +45,7 @@ protected:
 	QSet<int> keysReleased; // track released keys
 
 	QList<PlotWidget*> plotWidgets;
+	QList<TyreWidget*> tyreWidgets;
 
 	double simTime;
 	QElapsedTimer* realClock;   // wall-clock timer
@@ -68,5 +70,6 @@ private:
 
 private slots:
 	void on_actionAdd_Plot_triggered();
+	void on_actionAdd_Tyres_View_triggered();
 	void updateData(double realTime);
 };

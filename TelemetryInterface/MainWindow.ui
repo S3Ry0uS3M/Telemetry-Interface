@@ -42,6 +42,7 @@
      <string>Graphs</string>
     </property>
     <addaction name="actionAdd_Plot"/>
+    <addaction name="actionAdd_Tyres_View"/>
    </widget>
    <addaction name="menuGraphs"/>
   </widget>
@@ -49,6 +50,11 @@
   <action name="actionAdd_Plot">
    <property name="text">
     <string>Add Plot</string>
+   </property>
+  </action>
+  <action name="actionAdd_Tyres_View">
+   <property name="text">
+    <string>Add Tyres View</string>
    </property>
   </action>
  </widget>

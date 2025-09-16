@@ -116,6 +116,22 @@ void MainWindow::on_actionAdd_Plot_triggered()
 	addDockWidget(Qt::LeftDockWidgetArea, dock);   // Add to main window
 }
 
+void MainWindow::on_actionAdd_Tyres_View_triggered()
+{
+	if (!selectedSimulation)
+		return;
+	
+	// Initialize widget
+	TyreWidget* widget = new TyreWidget();
+	tyreWidgets.append(widget);
+	QDockWidget* dock = new QDockWidget("Tyre Plot " + QString::number(this->tyreWidgets.size()), this);
+	dock->setWidget(widget);                         // Assign content
+	dock->setFloating(false);                        // Optional: docked by default
+	dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+	dock->raise();
+	addDockWidget(Qt::LeftDockWidgetArea, dock);   // Add to main window
+}
+
 void MainWindow::simulateLoop()
 {
 	realClock->start();
@@ -165,6 +181,13 @@ void MainWindow::updateData(double realTime)
 	brakePercent = std::clamp(brakePercent, 0.0, 100.0);
 
 	for (PlotWidget* widget : plotWidgets)
+	{
+		if (!widget) continue;
+
+		widget->updatePlot(simTime);
+	}
+
+	for (TyreWidget* widget : tyreWidgets)
 	{
 		if (!widget) continue;
 
