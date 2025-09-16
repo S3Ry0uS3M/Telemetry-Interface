@@ -41,6 +41,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	simTime = 0.0;
 	brakePercent = 0.0;
 	throttlePercent = 0.0;
+	steering = 0.0;
+
+	gear = 0;
+	lastShiftTime.start();
+
 	simThread = std::thread(&MainWindow::simulateLoop, this);
 
 	// Initialize components
@@ -57,9 +62,28 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 		throttlePercent = std::clamp(throttlePercent, 0.0, 100.0);
 	});
 
-	// Example: steering wheel axis
-	connect(gamepad, &QGamepad::axisLeftXChanged, this, [](double value) {
-		//qDebug() << "Steering:" << value;
+	connect(gamepad, &QGamepad::axisLeftXChanged, this, [this](double value) {
+		steering = value;
+	});
+
+	connect(gamepad, &QGamepad::buttonAChanged, this, [this](bool pressed) {
+		if (pressed && gear < 7 && lastShiftTime.elapsed() > 200)
+		{
+			gear++; // Gear up
+			lastShiftTime.restart();
+		}
+	});
+
+	connect(gamepad, &QGamepad::buttonBChanged, this, [this](bool pressed) {
+		if (pressed && gear > 1 && lastShiftTime.elapsed() > 200)
+		{
+			gear--; // Gear down
+			lastShiftTime.restart();
+		}
+	});
+
+	connect(gamepad, &QGamepad::buttonStartChanged, this, [this](bool pressed) {
+		gear = 0; // Neutral
 	});
 
 	timer = new QTimer(this);
@@ -119,7 +143,7 @@ void MainWindow::simulateStep()
 				sim->simulateStep(throttlePercent, brakePercent, simTime, dt);
 			}
 			else if constexpr (std::is_same_v<T, std::shared_ptr<XdofVehicleTelemetry>>) {
-				sim->simulateStep(dt);
+				sim->simulateStep(throttlePercent, brakePercent, gear, steering, dt);
 			}
 		}, *selectedSimulation);
 	}
