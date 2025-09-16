@@ -123,7 +123,8 @@
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>..\ExternalLib\QCustomPlot;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\ExternalLib\QCustomPlot;..\ExternalLib\Eigen;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -155,6 +156,7 @@
   <ItemGroup>
     <QtUic Include="MainWindow.ui" />
     <QtUic Include="PlotWidget.ui" />
+    <QtUic Include="TyreWidget.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h" />
@@ -168,6 +170,7 @@
     <ClInclude Include="Inverter.h" />
     <ClInclude Include="Motor.h" />
     <ClInclude Include="PIDController.h" />
+    <QtMoc Include="TyreWidget.h" />
     <ClInclude Include="VehicleTelemetry.h" />
     <ClInclude Include="XdofVehicle.h" />
     <ClInclude Include="XdofVehicleTelemetry.h" />

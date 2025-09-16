@@ -47,6 +47,9 @@
     <QtUic Include="PlotWidget.ui">
       <Filter>Form Files</Filter>
     </QtUic>
+    <QtUic Include="TyreWidget.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -56,6 +59,9 @@
       <Filter>File di intestazione</Filter>
     </QtMoc>
     <QtMoc Include="PlotWidget.h">
+      <Filter>File di intestazione</Filter>
+    </QtMoc>
+    <QtMoc Include="TyreWidget.h">
       <Filter>File di intestazione</Filter>
     </QtMoc>
   </ItemGroup>
