@@ -1,0 +1,102 @@
+#pragma once
+
+#include <QVector>
+#include <numbers>
+
+class Engine
+{
+public:
+	Engine()
+	{
+		for (int i = 0; i < gearRatios.size(); i++)
+			rt.push_back(gearRatios[i] * r_final);
+	}
+	~Engine() {};
+
+private:
+	// [Nm] Engine torque curve
+	const QVector<double> T_m = { 558.687348016378, 572.805288620221, 583.255710898092, 593.261434355629, 599.923795131873, 609.180956729229, 615.258432626951,
+		622.474732624635, 632.114828041388, 638.740769635113, 646.421953778950, 652.546822483130, 659.707141963830, 667.848414811759, 674.498006166769,
+		678.541340835388, 683.620480696612, 687.381698252657, 691.021586210120, 694.545922168933, 696.862701052572, 698.027656264507, 698.093143426179,
+		696.060109153369, 695.119737372311, 692.170826196689, 688.302812756178, 683.554532357745, 677.962662791304, 673.486118156730, 667.232318488132,
+		661.145286810696, 654.294295691963, 644.884824567477, 634.816173460368, 625.002424912934, 614.556082818016, 577.487620679787, 531.044977487345, 486.567638719944 };
+
+	// [rpm] Engine speed curve
+	const QVector<double> n_m = { 4400, 4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000, 6100, 6200, 6300, 6400, 6500, 6600, 6700,
+		6800, 6900, 7000, 7100, 7200, 7300, 7400, 7500, 7600, 7700, 7800, 7900, 8000, 8100, 8200, 8300 };
+
+	QVector<double> gearRatios = { 35.0 / 13.0, 33.0 / 16.0, 27.0 / 16.0, 27.0 / 19.0, 23.0 / 19.0, 20.0 / 19.0, 23.0 / 24.0 }; // rt: gear ratios(out / in = n_in / n_out)
+	double r_final = 46.0 / 14.0; // final gear to differential
+	QVector<double> rt = {}; // total gear ratios (gear * final)
+
+protected:
+	//Measurements
+	double totTorque = 0.0; // [Nm] total engine torque
+	double torque2 = 0.0; // [Nm] engine torque seen in rl tyre
+	double torque3 = 0.0; // [Nm] engine torque seen in rr tyre
+	double RPM = 0.0; // [rpm]
+
+public:
+	double getEngineTorque() const { return totTorque; };
+	double getEngineTorque2() const { return torque2; };
+	double getEngineTorque3() const { return torque3; };
+	double getEngineRPM() const { return RPM; };
+
+public:
+	void update(double vx_car, double omega_w2, double omega_w3, double throttle, int gear)
+	{
+		// Engine torque
+		double n_ice2 = n_m.first();
+		double n_ice3 = n_m.first();
+		torque2 = 0.0;
+		torque3 = 0.0;
+		if (gear > 0)
+		{
+			// Engine speed
+			double n_2 = omega_w2 * 30 / std::numbers::pi; // [rpm] speed of wheel 2
+			double n_3 = omega_w3 * 30 / std::numbers::pi; // [rpm] speed of wheel 3
+
+			n_ice2 = n_2 * rt[gear - 1]; // [rpm] speed of wheel 2 seen in ICE
+			n_ice2 = std::min(n_m.last(), std::max(n_m.first(), n_ice2));
+			n_ice3 = n_3 * rt[gear - 1]; // [rpm] speed of wheel 3 seen in ICE
+			n_ice3 = std::min(n_m.last(), std::max(n_m.first(), n_ice3));
+			
+			// Engine torque
+			double Tice_2 = 0.0;
+			if (vx_car >= 0.1 && throttle < 0.05)
+				Tice_2 = -0.1 * 0.5 * linearInterp(n_m, T_m, n_ice2); // Engine braking
+			else if ((n_ice2 < n_m.last() || vx_car < 0.1) && throttle >= 0.05)
+				Tice_2 = 0.5 * linearInterp(n_m, T_m, n_ice2);	// Engine traction
+
+			double Tice_3 = 0.0;
+			if (vx_car >= 0.1 && throttle < 0.05)
+				Tice_3 = -0.1 * 0.5 * linearInterp(n_m, T_m, n_ice3);
+			else if ((n_ice3 < n_m.last() || vx_car < 0.1) && throttle >= 0.05)
+				Tice_3 = 0.5 * linearInterp(n_m, T_m, n_ice3);
+
+			torque2 = Tice_2 * rt[gear - 1];
+			torque3 = Tice_3 * rt[gear - 1];
+		}
+		totTorque = torque2 + torque3;
+		RPM = (n_ice2 + n_ice3) / 2;
+	}
+
+private:
+	double linearInterp(QVector<double> x_vec, QVector<double> y_vec, double x)
+	{
+		// Find the interval [x0, x1] where x is located
+		if (x <= x_vec.first()) return y_vec.first();
+		if (x >= x_vec[x_vec.size() - 1]) return y_vec.last();
+		int i = 0;
+		while (i < x_vec.size() - 1 && x_vec[i + 1] < x) {
+			i++;
+		}
+		double x0 = x_vec[i];
+		double y0 = y_vec[i];
+		double x1 = x_vec[i + 1];
+		double y1 = y_vec[i + 1];
+
+		// Linear interpolation formula
+		return y0 + (y1 - y0) * (x - x0) / (x1 - x0);
+	}
+};
