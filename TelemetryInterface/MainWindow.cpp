@@ -5,6 +5,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 	this->setupUi(this);
 	setWindowTitle("Telemetry Interface");
 
+	if (!initDirectInput()) {
+		qDebug() << "Failed to initialize DirectInput!";
+	}
+
 	// Add telemetry selection
 	QToolBar* toolbar = new QToolBar("Top Toolbar", this);
 	addToolBar(Qt::TopToolBarArea, toolbar);
@@ -88,6 +92,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent)
 
 	timer = new QTimer(this);
 	connect(timer, &QTimer::timeout, this, [=]() {
+		pollDirectInput();   // <- poll T150 state here
 		// show only up to current real elapsed time
 		double realTime = realClock->elapsed() / 1000.0;
 		updateData(realTime);
@@ -210,4 +215,85 @@ void MainWindow::keyReleaseEvent(QKeyEvent* event)
 {
 	keysHeld.remove(event->key());
 	keysReleased.insert(event->key());
+}
+
+BOOL CALLBACK MainWindow::EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext) {
+	MainWindow* window = reinterpret_cast<MainWindow*>(pContext);
+	if (FAILED(window->g_pDI->CreateDevice(pdidInstance->guidInstance, &window->g_pJoystick, NULL))) {
+		return DIENUM_CONTINUE;
+	}
+	return DIENUM_STOP;
+}
+
+bool MainWindow::initDirectInput() {
+	if (FAILED(DirectInput8Create(GetModuleHandle(NULL), DIRECTINPUT_VERSION, IID_IDirectInput8,
+		(VOID**)&g_pDI, NULL))) {
+		return false;
+	}
+
+	if (FAILED(g_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback,
+		this, DIEDFL_ATTACHEDONLY))) {
+		return false;
+	}
+
+	if (!g_pJoystick) return false;
+
+	if (FAILED(g_pJoystick->SetDataFormat(&c_dfDIJoystick2))) return false;
+
+	if (FAILED(g_pJoystick->SetCooperativeLevel((HWND)winId(),
+		DISCL_NONEXCLUSIVE | DISCL_BACKGROUND)))
+		return false;
+
+	g_pJoystick->Acquire();
+	return true;
+}
+
+void MainWindow::pollDirectInput() {
+	if (!g_pJoystick) return;
+
+	DIJOYSTATE2 js;
+	ZeroMemory(&js, sizeof(js));
+
+	if (FAILED(g_pJoystick->Poll())) {
+		g_pJoystick->Acquire();
+		return;
+	}
+	if (FAILED(g_pJoystick->GetDeviceState(sizeof(DIJOYSTATE2), &js))) {
+		return;
+	}
+
+	// Normalize values (example ranges: 0..65535)
+	steering = (js.lX - 32767) / 32767.0;   // -1.0 .. +1.0
+	brakePercent = (65535 - js.lY) / 65535.0 * 100.0;
+	throttlePercent = (65535 - js.lRz) / 65535.0 * 100.0;
+
+	// Paddles as gear shifters
+	bool paddleRight = (js.rgbButtons[1] & 0x80);  // Gear up
+	bool paddleLeft = (js.rgbButtons[0] & 0x80);  // Gear down
+	bool startButton = (js.rgbButtons[12] & 0x80);  // Neutral
+
+	// Debug only - understand which button is what
+	/*for (int i = 0; i < 32; i++) {
+		if (js.rgbButtons[i] & 0x80) {
+			qDebug() << "Button pressed:" << i;
+		}
+	}*/
+
+	if (paddleRight) {
+		if (gear < 7 && lastShiftTime.elapsed() > 200) {
+			gear++;
+			lastShiftTime.restart();
+		}
+	}
+
+	if (paddleLeft) {
+		if (gear > 1 && lastShiftTime.elapsed() > 200) {
+			gear--;
+			lastShiftTime.restart();
+		}
+	}
+
+	if (startButton) {
+		gear = 0;
+	}
 }

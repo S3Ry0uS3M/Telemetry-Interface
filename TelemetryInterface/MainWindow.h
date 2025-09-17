@@ -5,6 +5,7 @@
 #include <QtMath>
 #include <QGamepad>
 #include <variant>
+#include <dinput.h>
 #include "qcustomplot.h"
 
 #include "VehicleTelemetry.h"
@@ -29,6 +30,12 @@ public:
 		running = false;
 		if (simThread.joinable())
 			simThread.join();
+
+		if (g_pJoystick) {
+			g_pJoystick->Unacquire();
+			g_pJoystick->Release();
+		}
+		if (g_pDI) g_pDI->Release();
 	};
 
 protected:
@@ -58,9 +65,16 @@ protected:
 	QElapsedTimer lastShiftTime;
 	int gear;
 
+	LPDIRECTINPUT8 g_pDI = nullptr;
+	LPDIRECTINPUTDEVICE8 g_pJoystick = nullptr;
+
 protected:
 	void keyPressEvent(QKeyEvent* event) override;
 	void keyReleaseEvent(QKeyEvent* event) override;
+
+	bool initDirectInput();
+	static BOOL CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* pdidInstance, VOID* pContext);
+	void pollDirectInput();
 
 private:
 	std::thread simThread;
