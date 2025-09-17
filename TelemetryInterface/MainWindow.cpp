@@ -116,15 +116,19 @@ void MainWindow::on_actionAdd_Plot_triggered()
 	addDockWidget(Qt::LeftDockWidgetArea, dock);   // Add to main window
 }
 
-void MainWindow::on_actionAdd_Tyres_View_triggered()
+void MainWindow::on_actionAdd_XY_Plot_triggered()
 {
 	if (!selectedSimulation)
 		return;
 	
 	// Initialize widget
-	TyreWidget* widget = new TyreWidget();
-	tyreWidgets.append(widget);
-	QDockWidget* dock = new QDockWidget("Tyre Plot " + QString::number(this->tyreWidgets.size()), this);
+	XyPlotWidget* widget = new XyPlotWidget();
+	std::visit([&](auto& sim) {
+		widget->setSelectableChannels(sim->getChannels());
+		widget->setAvailableChannels(sim->getMap());
+	}, *selectedSimulation);
+	xyPlotWidgets.append(widget);
+	QDockWidget* dock = new QDockWidget("XY-Plot " + QString::number(this->xyPlotWidgets.size()), this);
 	dock->setWidget(widget);                         // Assign content
 	dock->setFloating(false);                        // Optional: docked by default
 	dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
@@ -187,11 +191,11 @@ void MainWindow::updateData(double realTime)
 		widget->updatePlot(simTime);
 	}
 
-	for (TyreWidget* widget : tyreWidgets)
+	for (XyPlotWidget* widget : xyPlotWidgets)
 	{
 		if (!widget) continue;
 
-		widget->updatePlot(simTime);
+		widget->updatePlot();
 	}
 }
 
