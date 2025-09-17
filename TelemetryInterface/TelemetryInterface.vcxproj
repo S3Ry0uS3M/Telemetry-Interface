@@ -156,7 +156,7 @@
   <ItemGroup>
     <QtUic Include="MainWindow.ui" />
     <QtUic Include="PlotWidget.ui" />
-    <QtUic Include="TyreWidget.ui" />
+    <QtUic Include="XyPlotWidget.ui" />
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h" />
@@ -167,12 +167,14 @@
   <ItemGroup>
     <ClInclude Include="Battery.h" />
     <ClInclude Include="Carrier.h" />
+    <ClInclude Include="Engine.h" />
     <ClInclude Include="Inverter.h" />
     <ClInclude Include="Motor.h" />
     <ClInclude Include="PIDController.h" />
-    <QtMoc Include="TyreWidget.h" />
-    <ClInclude Include="VehicleTelemetry.h" />
     <ClInclude Include="XdofVehicle.h" />
+    <QtMoc Include="XyPlotWidget.h" />
+    <ClInclude Include="Tyre.h" />
+    <ClInclude Include="VehicleTelemetry.h" />
     <ClInclude Include="XdofVehicleTelemetry.h" />
     <QtMoc Include="PlotWidget.h" />
     <ClInclude Include="Powertrain.h" />

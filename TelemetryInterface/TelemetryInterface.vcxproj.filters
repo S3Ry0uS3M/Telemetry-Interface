@@ -47,7 +47,7 @@
     <QtUic Include="PlotWidget.ui">
       <Filter>Form Files</Filter>
     </QtUic>
-    <QtUic Include="TyreWidget.ui">
+    <QtUic Include="XyPlotWidget.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -61,7 +61,7 @@
     <QtMoc Include="PlotWidget.h">
       <Filter>File di intestazione</Filter>
     </QtMoc>
-    <QtMoc Include="TyreWidget.h">
+    <QtMoc Include="XyPlotWidget.h">
       <Filter>File di intestazione</Filter>
     </QtMoc>
   </ItemGroup>
@@ -90,10 +90,16 @@
     <ClInclude Include="VehicleTelemetry.h">
       <Filter>File di intestazione\Car</Filter>
     </ClInclude>
+    <ClInclude Include="XdofVehicleTelemetry.h">
+      <Filter>File di intestazione\xDOFCar</Filter>
+    </ClInclude>
+    <ClInclude Include="Tyre.h">
+      <Filter>File di intestazione\xDOFCar</Filter>
+    </ClInclude>
     <ClInclude Include="XdofVehicle.h">
       <Filter>File di intestazione\xDOFCar</Filter>
     </ClInclude>
-    <ClInclude Include="XdofVehicleTelemetry.h">
+    <ClInclude Include="Engine.h">
       <Filter>File di intestazione\xDOFCar</Filter>
     </ClInclude>
   </ItemGroup>
