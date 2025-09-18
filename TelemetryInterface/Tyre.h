@@ -177,7 +177,10 @@ private:
 	{
 		const double eps = 1e-4;
 		if (std::abs(vx) < eps) return 0.0; // avoid division by zero
-
+		
+		// Pure rolling condition: vrad = vx -> lambda = 0
+		// Driving condition: vrad > vx -> lambda > 0
+		// Braking condition: vrad < vx -> lambda < 0
 		return (vrad - vx) / (std::max(std::max(std::abs(vrad), std::abs(vx)), std::abs(vrad - vx)));
 	}
 

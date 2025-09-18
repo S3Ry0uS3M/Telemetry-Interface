@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SFML/Audio.hpp>
 #include <QMutex>
 #include <QList>
 #include <Dense>
@@ -8,6 +9,7 @@
 #include "Tyre.h"
 
 using namespace Eigen;
+using namespace sf;
 
 const double CzSmax = 5.2; // [max lift x frontal area]
 const double CxSmax = 1;   // [max drag x frontal area]
@@ -35,6 +37,9 @@ public:
 	Engine* engine;
 
 private:
+	Music engineMusic;
+
+private:
 	// States
 	double Vx = 10;
 	double Vy = 0.0;
@@ -59,6 +64,12 @@ protected:
 	double cd = (0.8 * CxSmax) / af; // [-] Drag coefficient
 	double cl = CzSmax / af; // [-] Lift coefficient
 	const double k_yaw_damp = 1000.0; // [Nm/rad]
+
+	// --- Traction control parameters (tune these as class members ideally) ---
+	double lambda_target = 0.10;   // target slip (10%)
+	double Kp_tc = 2.0;            // proportional gain
+	double min_factor = 0.15;      // minimum allowed torque fraction
+	double v_min_for_tc = 1.0;     // below this speed be gentle/disable TC
 
 protected:
 	// Measurements
@@ -145,9 +156,61 @@ public:
 		}
 
 		// Engine torque
-		this->engine->update(Vx, this->rlTyre->getTyreOmega(), this->rrTyre->getTyreOmega(), throttle, gear);
+		this->engine->update(Vx, this->rlTyre->getTyreOmega(), this->rrTyre->getTyreOmega(), throttle, gear, dt);
+		
+		if (!engineMusic.isLooping())
+		{
+			// Initialize engine sound
+			if (!engineMusic.openFromFile("C:/Users/super/source/repos/TelemetryInterface/TelemetryInterface/Resources/sc63_in_idle.wav"))
+				qDebug() << "Failed to load engine sound\n";
+			else
+			{
+				engineMusic.setLooping(true);
+				engineMusic.play();
+			}
+		}
+		
+		if (engineMusic.isLooping())
+		{
+			double baseRPM = 2000; // base RPM of your audio sample
+			double rpm = this->engine->getEngineRPM();
+			double pitch = rpm / baseRPM;
+			engineMusic.setPitch(static_cast<float>(pitch));
+
+			double idleVol = 20.0;
+			double maxVol = 100.0;
+			double rpmNorm = (rpm - 4400) / (8300 - 4400);
+			rpmNorm = std::clamp(rpmNorm, 0.0, 1.0);
+
+			// base loudness mostly from RPM
+			double baseVol = idleVol + (maxVol - idleVol) * rpmNorm;
+
+			// add some throttle influence (10–20% effect)
+			double volume = baseVol * (0.8 + 0.2 * throttle);
+			engineMusic.setVolume(static_cast<float>(volume));
+		}
 
 		QList<double> engineTorques = { 0.0, this->engine->getEngineTorque2(), this->engine->getEngineTorque3(), 0.0 };
+
+		// Apply TC to driven wheels (in your layout driven wheels are indices 1 and 2)
+		for (int i = 0; i < tyres.size(); ++i)
+		{
+			// Only apply TC to driven wheels (nonzero engine torque) and if car speed is sufficient
+			if (engineTorques[i] > 1e-6 && Vx > v_min_for_tc)
+			{
+				double slip = tyres[i]->getLongSlip();
+				// Only act on driving (tractive) slip > target
+				if (slip > lambda_target)
+				{
+					// linear reduction
+					double factor = 1.0 - Kp_tc * (slip - lambda_target);
+					// soften / clamp and ensure it's not negative
+					factor = std::max(min_factor, std::min(1.0, factor));
+					engineTorques[i] *= factor;
+				}
+			}
+		}
+
 		for (int i = 0; i < tyres.size(); i++)
 		{
 			// Mechanical brakes

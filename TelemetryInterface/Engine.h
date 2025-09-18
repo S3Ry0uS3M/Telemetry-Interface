@@ -25,6 +25,9 @@ private:
 	const QVector<double> n_m = { 4400, 4500, 4600, 4700, 4800, 4900, 5000, 5100, 5200, 5300, 5400, 5500, 5600, 5700, 5800, 5900, 6000, 6100, 6200, 6300, 6400, 6500, 6600, 6700,
 		6800, 6900, 7000, 7100, 7200, 7300, 7400, 7500, 7600, 7700, 7800, 7900, 8000, 8100, 8200, 8300 };
 
+	const double rpmRiseRate = 3000.0;  // [rpm/s] how fast engine can rev up
+	const double rpmFallRate = 2000.0;  // [rpm/s] how fast it drops
+
 	QVector<double> gearRatios = { 35.0 / 13.0, 33.0 / 16.0, 27.0 / 16.0, 27.0 / 19.0, 23.0 / 19.0, 20.0 / 19.0, 23.0 / 24.0 }; // rt: gear ratios(out / in = n_in / n_out)
 	double r_final = 46.0 / 14.0; // final gear to differential
 	QVector<double> rt = {}; // total gear ratios (gear * final)
@@ -43,11 +46,11 @@ public:
 	double getEngineRPM() const { return RPM; };
 
 public:
-	void update(double vx_car, double omega_w2, double omega_w3, double throttle, int gear)
+	void update(double vx_car, double omega_w2, double omega_w3, double throttle, int gear, double dt)
 	{
 		// Engine torque
-		double n_ice2 = n_m.first();
-		double n_ice3 = n_m.first();
+		double n_ice2 = RPM;
+		double n_ice3 = RPM;
 		torque2 = 0.0;
 		torque3 = 0.0;
 		if (gear > 0)
@@ -56,9 +59,24 @@ public:
 			double n_2 = omega_w2 * 30 / std::numbers::pi; // [rpm] speed of wheel 2
 			double n_3 = omega_w3 * 30 / std::numbers::pi; // [rpm] speed of wheel 3
 
-			n_ice2 = n_2 * rt[gear - 1]; // [rpm] speed of wheel 2 seen in ICE
+			double n_ice2_target = n_2 * rt[gear - 1]; // [rpm] speed of wheel 2 seen in ICE
+			double n_ice3_target = n_3 * rt[gear - 1]; // [rpm] speed of wheel 3 seen in ICE
+
+			// Approach target gradually
+			double diff2 = n_ice2_target - RPM;
+			double maxStep2 = (diff2 > 0 ? rpmRiseRate : -rpmFallRate * (gear == 1 ? 1.0 : 10.0)) * dt;
+			if (std::abs(diff2) > std::abs(maxStep2))
+				n_ice2 += maxStep2;
+			else
+				n_ice2 = n_ice2_target;
 			n_ice2 = std::min(n_m.last(), std::max(n_m.first(), n_ice2));
-			n_ice3 = n_3 * rt[gear - 1]; // [rpm] speed of wheel 3 seen in ICE
+
+			double diff3 = n_ice3_target - RPM;
+			double maxStep3 = (diff3 > 0 ? rpmRiseRate : -rpmFallRate) * dt;
+			if (std::abs(diff3) > std::abs(maxStep3))
+				n_ice3 += maxStep3;
+			else
+				n_ice3 = n_ice3_target;
 			n_ice3 = std::min(n_m.last(), std::max(n_m.first(), n_ice3));
 			
 			// Engine torque
@@ -76,6 +94,21 @@ public:
 
 			torque2 = Tice_2 * rt[gear - 1];
 			torque3 = Tice_3 * rt[gear - 1];
+		}
+		else
+		{
+			// Target RPM based on throttle
+			double targetRPM = n_m.first() + throttle * (n_m.last() - n_m.first());
+
+			// Approach target gradually
+			double diff = targetRPM - RPM;
+			double maxStep = (diff > 0 ? rpmRiseRate : -rpmFallRate) * dt;
+			if (std::abs(diff) > std::abs(maxStep))
+				RPM += maxStep;
+			else
+				RPM = targetRPM;
+			n_ice2 = RPM;
+			n_ice3 = RPM;
 		}
 		totTorque = torque2 + torque3;
 		RPM = (n_ice2 + n_ice3) / 2;

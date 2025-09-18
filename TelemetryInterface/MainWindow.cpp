@@ -273,11 +273,11 @@ void MainWindow::pollDirectInput() {
 	bool startButton = (js.rgbButtons[12] & 0x80);  // Neutral
 
 	// Debug only - understand which button is what
-	/*for (int i = 0; i < 32; i++) {
-		if (js.rgbButtons[i] & 0x80) {
-			qDebug() << "Button pressed:" << i;
-		}
-	}*/
+	//for (int i = 0; i < 32; i++) {
+	//	if (js.rgbButtons[i] & 0x80) {
+	//		qDebug() << "Button pressed:" << i;
+	//	}
+	//}
 
 	if (paddleRight) {
 		if (gear < 7 && lastShiftTime.elapsed() > 200) {
