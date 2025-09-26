@@ -186,8 +186,38 @@ void MainWindow::updateData(double realTime)
 	if (keysHeld.contains(Qt::Key_Down))
 		brakePercent += 5;
 
+	if (keysReleased.contains(Qt::Key_Right) && keysReleased.contains(Qt::Key_Left))
+		steering = 0.0;
+	else
+	{
+		if (keysReleased.contains(Qt::Key_Right) && steering > 0)
+			steering -= 0.05;
+		if (keysHeld.contains(Qt::Key_Right))
+			steering += 0.05;
+
+		if (keysReleased.contains(Qt::Key_Left) && steering < 0)
+			steering += 0.05;
+		if (keysHeld.contains(Qt::Key_Left))
+			steering -= 0.05;
+	}
+
+	if (keysHeld.contains(Qt::Key_Shift)) {
+		if (gear < 7 && lastShiftTime.elapsed() > 200) {
+			gear++;
+			lastShiftTime.restart();
+		}
+	}
+
+	if (keysHeld.contains(Qt::Key_Control)) {
+		if (gear > 1 && lastShiftTime.elapsed() > 200) {
+			gear--;
+			lastShiftTime.restart();
+		}
+	}
+
 	throttlePercent = std::clamp(throttlePercent, 0.0, 100.0);
 	brakePercent = std::clamp(brakePercent, 0.0, 100.0);
+	steering = std::clamp(steering, -1.0, 1.0);
 
 	for (PlotWidget* widget : plotWidgets)
 	{
