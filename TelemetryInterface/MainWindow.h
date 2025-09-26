@@ -19,7 +19,7 @@ using namespace std;
 using Objects = std::variant<std::shared_ptr<VehicleTelemetry>, std::shared_ptr<XdofVehicleTelemetry>>;
 
 const double dt = 1E-03; //1E-05;
-const double millis = 1.0 / 33.0;
+const double millis = 33.0; // 30 FPS
 
 class MainWindow : public QMainWindow, Ui::MainWindow
 {
