@@ -21,8 +21,12 @@ int main()
 
     Powertrain* pt = new Powertrain();
     double tau_step = 25.0; // Nm
-    double tau_max = pt->motor->getMaxTorque();
+    double tau_max = 900; // pt->motor->getMaxTorque();
     double Vmax = pt->battery->getVdcMax() / std::sqrt(3.0);
+    
+    // Calculate max current given max torque, max voltage
+    double Imax_motor = pt->motor->getMaxCurrent(pt->motor->getMaxTorque(), Vmax);
+    std::cout << "Imax_motor: " << Imax_motor << endl;
     
     for (double rpm = 0; rpm <= 12000; rpm += 200)
     {
@@ -33,8 +37,19 @@ int main()
         double time = 0.0;
         while (time < simTime)
         {
-            double vd_star = pt->pidId->update(0.0, pt->motor->getId(), dt) - pt->motor->getMutualInductaceIq();
-            double vq_star = pt->pidIq->update(pt->motor->getIqTarget(tau_max), pt->motor->getIq(), dt) + pt->motor->getMutualInductaceId();
+            // Check current limits
+            double Id_tgt = pt->motor->getIdTarget();
+            double Iq_tgt = pt->motor->getIqTarget(tau_max);
+            double I_mag = std::sqrt(Id_tgt * Id_tgt + Iq_tgt * Iq_tgt);
+            if (I_mag > pt->inverter->getMaxCurrent())
+            {
+                double scale = pt->inverter->getMaxCurrent() / I_mag;
+                Id_tgt *= scale;
+                Iq_tgt *= scale;
+            }
+
+            double vd_star = pt->pidId->update(Id_tgt, pt->motor->getId(), dt) - pt->motor->getMutualInductaceIq();
+            double vq_star = pt->pidIq->update(Iq_tgt, pt->motor->getIq(), dt) + pt->motor->getMutualInductaceId();
 
             Inverter* inverter = pt->inverter;
             inverter->update(pt->battery->getVbat(), vd_star, vq_star, pt->motor->getElectricalAngle(), inverter->carrier->getCarrierValue(time), (int)(1.0 / (inverter->carrier->getFrequency() * dt)));
