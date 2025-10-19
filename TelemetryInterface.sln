@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36203.30 d17.14
+VisualStudioVersion = 17.14.36203.30
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TelemetryInterface", "TelemetryInterface\TelemetryInterface.vcxproj", "{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EMotorCharacterization", "EMotorCharacterization\EMotorCharacterization.vcxproj", "{39986A1A-7DFA-4E39-9302-CEFCB568D96C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,14 @@ Global
 		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x64.Build.0 = Release|x64
 		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x86.ActiveCfg = Release|Win32
 		{3354B2A4-D615-4A89-AA27-CEB83DE4DF01}.Release|x86.Build.0 = Release|Win32
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Debug|x64.ActiveCfg = Debug|x64
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Debug|x64.Build.0 = Debug|x64
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Debug|x86.ActiveCfg = Debug|Win32
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Debug|x86.Build.0 = Debug|Win32
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Release|x64.ActiveCfg = Release|x64
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Release|x64.Build.0 = Release|x64
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Release|x86.ActiveCfg = Release|Win32
+		{39986A1A-7DFA-4E39-9302-CEFCB568D96C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

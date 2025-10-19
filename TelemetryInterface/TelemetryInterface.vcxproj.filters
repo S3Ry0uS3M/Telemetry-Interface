@@ -19,14 +19,14 @@
     <Filter Include="File di intestazione\Car">
       <UniqueIdentifier>{77f70da2-88e2-433a-ac02-745c269ad5b6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="File di intestazione\Car\Eletric Motor">
-      <UniqueIdentifier>{c0b76553-0e1c-4e43-a352-e9aec4991de0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="File di intestazione\Car\Inverter">
       <UniqueIdentifier>{506742b6-6a48-4aa5-99d6-37ad270dd7c5}</UniqueIdentifier>
     </Filter>
     <Filter Include="File di intestazione\xDOFCar">
       <UniqueIdentifier>{85c5c7e2-6e6b-4fd1-a8d3-73a66974d182}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="File di intestazione\Car\Electric Motor">
+      <UniqueIdentifier>{c0b76553-0e1c-4e43-a352-e9aec4991de0}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -67,13 +67,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Motor.h">
-      <Filter>File di intestazione\Car\Eletric Motor</Filter>
+      <Filter>File di intestazione\Car\Electric Motor</Filter>
     </ClInclude>
     <ClInclude Include="Battery.h">
-      <Filter>File di intestazione\Car\Eletric Motor</Filter>
+      <Filter>File di intestazione\Car\Electric Motor</Filter>
     </ClInclude>
     <ClInclude Include="PIDController.h">
-      <Filter>File di intestazione\Car\Eletric Motor</Filter>
+      <Filter>File di intestazione\Car\Electric Motor</Filter>
     </ClInclude>
     <ClInclude Include="Vehicle.h">
       <Filter>File di intestazione\Car</Filter>
