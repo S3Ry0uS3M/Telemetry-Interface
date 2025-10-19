@@ -11,7 +11,7 @@ public:
 	Powertrain() {
 		motor = new Motor();
 		battery = new Battery();
-		inverter = new Inverter();
+		inverter = new Inverter(motor->getMaxCurrent(motor->getMaxTorque(), battery->getVdcMax()/std::sqrt(3)));
 		pidDriver = new PIDController(100, 5, 0, -4000, 4000);
 
 		double VdcMax = battery->getVdcMax();

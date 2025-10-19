@@ -6,8 +6,9 @@
 class Inverter
 {
 public:
-	Inverter() {
+	Inverter(double i_max) {
         carrier = new Carrier();
+        Imax = i_max;
     };
 	~Inverter() {};
 
@@ -23,12 +24,14 @@ public:
     double getVa() const { return vanSum / vanBuffer.size(); };
     double getVb() const { return vbnSum / vbnBuffer.size(); };
     double getVc() const { return vcnSum / vcnBuffer.size(); };
+    double getMaxCurrent() const { return Imax; };
 
 public:
     Carrier* carrier;
 
 protected:
 	// Parametri
+    double Imax = 0.0;
 	QVector<double> vanBuffer = {};
     QVector<double> vbnBuffer = {};
     QVector<double> vcnBuffer = {};
