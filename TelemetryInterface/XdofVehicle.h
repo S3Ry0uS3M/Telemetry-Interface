@@ -192,7 +192,7 @@ public:
 
 		QList<double> engineTorques = { 0.0, this->engine->getEngineTorque2(), this->engine->getEngineTorque3(), 0.0 };
 
-		// Apply TC to driven wheels (in your layout driven wheels are indices 1 and 2)
+		/*// Apply TC to driven wheels (in your layout driven wheels are indices 1 and 2)
 		for (int i = 0; i < tyres.size(); ++i)
 		{
 			// Only apply TC to driven wheels (nonzero engine torque) and if car speed is sufficient
@@ -209,7 +209,7 @@ public:
 					engineTorques[i] *= factor;
 				}
 			}
-		}
+		}*/
 
 		for (int i = 0; i < tyres.size(); i++)
 		{
