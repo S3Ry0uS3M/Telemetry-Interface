@@ -32,6 +32,12 @@ private:
 	double r_final = 46.0 / 14.0; // final gear to differential
 	QVector<double> rt = {}; // total gear ratios (gear * final)
 
+	// Differential
+	const double K_diff = 500.0; // [Nm/(rad/s)] differential stiffness
+	const double d_acc = 0.6; // acceleration differential action
+	const double d_brk = 0.3; // braking differential action
+	const double d_preload = 80.0; // [Nm] differential preload torque
+
 protected:
 	//Measurements
 	double totTorque = 0.0; // [Nm] total engine torque
@@ -61,39 +67,40 @@ public:
 
 			double n_ice2_target = n_2 * rt[gear - 1]; // [rpm] speed of wheel 2 seen in ICE
 			double n_ice3_target = n_3 * rt[gear - 1]; // [rpm] speed of wheel 3 seen in ICE
+			double rpm_tgt = 0.5 * (n_ice2_target + n_ice3_target);
 
 			// Approach target gradually
-			double diff2 = n_ice2_target - RPM;
-			double maxStep2 = (diff2 > 0 ? rpmRiseRate : -rpmFallRate * (gear == 1 ? 1.0 : 10.0)) * dt;
-			if (std::abs(diff2) > std::abs(maxStep2))
-				n_ice2 += maxStep2;
-			else
-				n_ice2 = n_ice2_target;
-			n_ice2 = std::min(n_m.last(), std::max(n_m.first(), n_ice2));
+			double diff = rpm_tgt - RPM;
+			double maxStep = (diff > 0 ? rpmRiseRate : -rpmFallRate * (gear == 1 ? 1.0 : 10.0)) * dt;
+			if (std::abs(diff) > std::abs(maxStep))
+				RPM += maxStep;
+			RPM = std::min(n_m.last(), std::max(n_m.first(), rpm_tgt));
 
-			double diff3 = n_ice3_target - RPM;
-			double maxStep3 = (diff3 > 0 ? rpmRiseRate : -rpmFallRate) * dt;
-			if (std::abs(diff3) > std::abs(maxStep3))
-				n_ice3 += maxStep3;
-			else
-				n_ice3 = n_ice3_target;
-			n_ice3 = std::min(n_m.last(), std::max(n_m.first(), n_ice3));
-			
-			// Engine torque
-			double Tice_2 = 0.0;
+			double T_engine = 0.0;
 			if (vx_car >= 0.1 && throttle < 0.05)
-				Tice_2 = -0.1 * 0.5 * linearInterp(n_m, T_m, n_ice2); // Engine braking
+				T_engine = -0.1 * 0.5 * linearInterp(n_m, T_m, RPM); // Engine braking
 			else if ((n_ice2 < n_m.last() || vx_car < 0.1) && throttle >= 0.05)
-				Tice_2 = 0.5 * linearInterp(n_m, T_m, n_ice2);	// Engine traction
+				T_engine = 0.5 * linearInterp(n_m, T_m, RPM);	// Engine traction
 
-			double Tice_3 = 0.0;
-			if (vx_car >= 0.1 && throttle < 0.05)
-				Tice_3 = -0.1 * 0.5 * linearInterp(n_m, T_m, n_ice3);
-			else if ((n_ice3 < n_m.last() || vx_car < 0.1) && throttle >= 0.05)
-				Tice_3 = 0.5 * linearInterp(n_m, T_m, n_ice3);
+			double T_drive = T_engine * rt[gear - 1];
+			double dOmega = omega_w2 - omega_w3;
+			if (std::abs(dOmega) < 1E-3) // avoid numerical issues at very low differences
+				dOmega = 0.0;
+			if (dOmega != 0.0)
+				dOmega = dOmega;
 
-			torque2 = Tice_2 * rt[gear - 1];
-			torque3 = Tice_3 * rt[gear - 1];
+			double bias = (T_drive >= 0.0) ? d_acc : d_brk;
+			double T_lock_max = bias * std::abs(T_drive);
+			T_lock_max = std::max(T_lock_max, d_preload); // ensure minimum preload
+			double T_lock_dyn = std::min(K_diff * std::abs(dOmega), T_lock_max);
+			double T_clutch = std::copysign(T_lock_dyn, dOmega);
+
+			double T_L = 0.5 * (T_drive - T_clutch);
+			double T_R = 0.5 * (T_drive + T_clutch);
+
+			torque2 = T_L;
+			torque3 = T_R;
+			totTorque = T_L + T_R; // = T_drive
 		}
 		else
 		{
@@ -107,11 +114,8 @@ public:
 				RPM += maxStep;
 			else
 				RPM = targetRPM;
-			n_ice2 = RPM;
-			n_ice3 = RPM;
+			totTorque = torque2 + torque3;
 		}
-		totTorque = torque2 + torque3;
-		RPM = (n_ice2 + n_ice3) / 2;
 	}
 
 private:
